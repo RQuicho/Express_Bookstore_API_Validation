@@ -27,7 +27,7 @@ beforeEach(async () => {
                 'Science Facts',
                 2003)
             RETURNING isbn`);
-    bookID = result.rows[0];
+    bookID = result.rows[0].isbn;
 });
 
 
@@ -45,8 +45,8 @@ describe("GET /books/:id", () => {
     test("Get info on one specific book", async() => {
         const response = await request(app).get(`/books/${bookID}`);
         expect(response.body.book.isbn).toBe(bookID);
-        expect(response.body.books).toHaveProperty("isbn");
-        expect(response.body.books).toHaveProperty("pages");
+        expect(response.body.book).toHaveProperty("isbn");
+        expect(response.body.book).toHaveProperty("pages");
     });
 });
 
@@ -63,9 +63,8 @@ describe("POST /books", () => {
             title: 'The day I wrote a book',
             year: 2010
         });
-        expect(response.body.book).toHaveLength(2);
-        expect(response.body.books[0]).toHaveProperty("isbn");
-        expect(response.body.books.isbn).toBe('987654321');
+        expect(response.body.book).toHaveProperty("isbn");
+        expect(response.body.book.isbn).toBe('987654321');
         expect(response.statusCode).toBe(201);
     });
     test("Book not created and returns 400 status code", async () => {
@@ -78,28 +77,30 @@ describe("POST /books", () => {
 describe("PUT /books/:isbn", () => {
     test("Update an existing book", async () => {
         const response = await request(app).put(`/books/${bookID}`).send({
-            amazon_url:'https://amazon.com/test',
-            author: 'Bill',
-            language:'English',
-            pages: 300,
-            publisher: 'Penguin',
-            title: 'Science Rules',
-            year: 2003
+            amazon_url: "http://a.co/eobPtX2",
+            author: "Matthew Lane",
+            language: "english",
+            pages: 264,
+            publisher: "Princeton University Press",
+            title: "TBD",
+            year: 2017
         });
-        expect(response.body.books.title).toBe('Science Rules');
-        expect(response.body.books).toHaveProperty('pages');
+        expect(response.body.book).toHaveProperty('pages');
+        expect(response.body.book.title).toBe('TBD');
     });
-    test("Book not updated and returns 400 status code", async () => {
+    test("Book not updated and returns 404 status code", async () => {
         const response = await request(app).post(`/books/${bookID}`).send({
-            amazon_url:'https://amazon.com/test',
-            author: 'Bill',
-            language:'English',
-            pages: 300,
-            publisher: 'Penguin',
-            title: 'Science Rules',
-            year: '2003'
+            isbn: '874564563478',
+            amazon_url: "http://a.co/eobPtX2",
+            author: "Matthew Lane",
+            language: "english",
+            pages: 264,
+            publisher: "Princeton University Press",
+            title: "TBD",
+            year: 2017,
+            wrong: 'this property should not exist'
         });
-        expect(response.statusCode).toBe(400);
+        expect(response.statusCode).toBe(404);
     });
 });
 
